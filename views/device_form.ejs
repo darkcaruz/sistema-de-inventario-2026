@@ -1,150 +1,151 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
-  <title><%= device ? 'Editar Equipo' : 'Nuevo Equipo' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= device ? 'Editar' : 'Nuevo' %> | INFORMATICA
+  </title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-<nav class="navbar navbar-dark bg-dark mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/devices">Inventario</a>
-    <a href="/logout" class="btn btn-outline-light btn-sm">Salir</a>
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/devices">
+        <i class="bi bi-cpu-fill me-2"></i>INFORMATICA
+      </a>
+      <a href="/logout" class="btn btn-outline-secondary btn-sm">Salir</a>
+    </div>
+  </nav>
+
+  <div class="container mt-5 animate-fade-in">
+
+    <div class="mb-4">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="/devices" class="text-primary text-decoration-none">Equipos</a></li>
+          <li class="breadcrumb-item active text-secondary" aria-current="page">
+            <%= device ? 'Editar' : 'Nuevo' %>
+          </li>
+        </ol>
+      </nav>
+      <h3><i class="bi bi-display me-2 text-primary"></i>
+        <%= device ? 'Editar Equipo' : 'Registrar Nuevo Equipo' %>
+      </h3>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><i class="bi bi-pencil-square me-2"></i> Datos del Dispositivo</div>
+      <div class="card-body p-4">
+        <form method="POST" action="<%= device ? '/devices/' + device.id + '/edit' : '/devices/new' %>">
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Código Interno</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-secondary text-primary"><i
+                    class="bi bi-qr-code"></i></span>
+                <input type="text" class="form-control" name="code" value="<%= device ? device.code || '' : '' %>"
+                  placeholder="INV-001">
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Nombre del Equipo</label>
+              <input type="text" class="form-control" name="name" required
+                value="<%= device ? device.name || '' : '' %>" placeholder="Nombre descriptivo">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Marca / Modelo</label>
+              <input type="text" class="form-control" name="brand_model"
+                value="<%= device ? device.brand_model || '' : '' %>" placeholder="Dell Latitude 5420">
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Procesador (CPU)</label>
+              <input type="text" class="form-control" name="cpu" placeholder="Intel i7 12th Gen"
+                value="<%= device ? device.cpu || '' : '' %>">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Memoria RAM</label>
+              <input type="text" class="form-control" name="ram" placeholder="16 GB"
+                value="<%= device ? device.ram || '' : '' %>">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Almacenamiento</label>
+              <input type="text" class="form-control" name="storage" placeholder="512 GB SSD"
+                value="<%= device ? device.storage || '' : '' %>">
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Número de Serie</label>
+              <input type="text" class="form-control" name="serial_number"
+                value="<%= device ? device.serial_number || '' : '' %>">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Ubicación</label>
+              <input type="text" class="form-control" name="location" placeholder="Sala de Servidores"
+                value="<%= device ? device.location || '' : '' %>">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label">Responsable Asignado</label>
+              <input type="text" class="form-control" name="responsible" placeholder="Nombre completo"
+                value="<%= device ? device.responsible || '' : '' %>">
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-12">
+              <label class="form-label">Observaciones Adicionales</label>
+              <textarea class="form-control" name="observations" rows="3"
+                placeholder="Estado estético, accesorios incluidos, etc."><%= device ? (device.observations || '') : '' %></textarea>
+            </div>
+          </div>
+
+          <div class="row g-4 mb-5">
+            <div class="col-md-4">
+              <label class="form-label">Estado Operativo</label>
+              <select name="status" class="form-select">
+                <option value="Disponible" <%=device && device.status==='Disponible' ? 'selected' : '' %>>🟢 Disponible
+                </option>
+                <option value="Asignado" <%=device && device.status==='Asignado' ? 'selected' : '' %>>🔴 Asignado
+                </option>
+                <option value="En mantención" <%=device && device.status==='En mantención' ? 'selected' : '' %>>🟠 En
+                  mantención</option>
+                <option value="Dado de baja" <%=device && device.status==='Dado de baja' ? 'selected' : '' %>>⚪ Dado de
+                  baja</option>
+                <option value="Perdido" <%=device && device.status==='Perdido' ? 'selected' : '' %>>⚫ Perdido</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-3 mt-4 border-top pt-4">
+            <a href="/devices" class="btn btn-outline-secondary">Cancelar</a>
+            <button class="btn btn-primary px-5" type="submit">
+              <i class="bi bi-save me-2"></i>
+              <%= device ? 'Guardar Cambios' : 'Registrar Equipo' %>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
   </div>
-</nav>
 
-<div class="container">
-
-  <h3 class="mb-4"><%= device ? 'Editar Equipo' : 'Nuevo Equipo' %></h3>
-
-  <form method="POST" action="<%= device ? '/devices/' + device.id + '/edit' : '/devices/new' %>">
-
-    <!-- Primera fila: código, nombre, marca/modelo -->
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <label class="form-label">Código interno</label>
-        <input
-          type="text"
-          class="form-control"
-          name="code"
-          value="<%= device ? device.code || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Nombre equipo</label>
-        <input
-          type="text"
-          class="form-control"
-          name="name"
-          required
-          value="<%= device ? device.name || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Marca / Modelo</label>
-        <input
-          type="text"
-          class="form-control"
-          name="brand_model"
-          value="<%= device ? device.brand_model || '' : '' %>">
-      </div>
-    </div>
-
-    <!-- Segunda fila: CPU, RAM, Disco -->
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <label class="form-label">CPU</label>
-        <input
-          type="text"
-          class="form-control"
-          name="cpu"
-          placeholder="Ej: Intel i5 10ª gen"
-          value="<%= device ? device.cpu || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">RAM</label>
-        <input
-          type="text"
-          class="form-control"
-          name="ram"
-          placeholder="Ej: 16 GB"
-          value="<%= device ? device.ram || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Disco</label>
-        <input
-          type="text"
-          class="form-control"
-          name="storage"
-          placeholder="Ej: 512 GB SSD"
-          value="<%= device ? device.storage || '' : '' %>">
-      </div>
-    </div>
-
-    <!-- Tercera fila: Nº serie, ubicación, responsable -->
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <label class="form-label">N° Serie</label>
-        <input
-          type="text"
-          class="form-control"
-          name="serial_number"
-          value="<%= device ? device.serial_number || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Ubicación</label>
-        <input
-          type="text"
-          class="form-control"
-          name="location"
-          placeholder="Ej: Bellavista, Logística, etc."
-          value="<%= device ? device.location || '' : '' %>">
-      </div>
-
-      <div class="col-md-4">
-        <label class="form-label">Responsable / Asignado a</label>
-        <input
-          type="text"
-          class="form-control"
-          name="responsible"
-          placeholder="Nombre de la persona que tiene el equipo"
-          value="<%= device ? device.responsible || '' : '' %>">
-      </div>
-    </div>
-
-    <!-- Observaciones -->
-    <div class="mb-3">
-      <label class="form-label">Observaciones</label>
-      <textarea
-        class="form-control"
-        name="observations"
-        rows="3"
-        placeholder="Notas sobre el equipo, estado físico, accesorios, etc."><%= device ? (device.observations || '') : '' %></textarea>
-    </div>
-
-    <!-- Estado -->
-    <div class="row mb-3">
-      <div class="col-md-3">
-        <label class="form-label">Estado</label>
-        <select name="status" class="form-select">
-          <option value="Disponible" <%= device && device.status === 'Disponible' ? 'selected' : '' %>>Disponible</option>
-          <option value="Asignado" <%= device && device.status === 'Asignado' ? 'selected' : '' %>>Asignado</option>
-          <option value="En mantención" <%= device && device.status === 'En mantención' ? 'selected' : '' %>>En mantención</option>
-          <option value="Dado de baja" <%= device && device.status === 'Dado de baja' ? 'selected' : '' %>>Dado de baja</option>
-          <option value="Perdido" <%= device && device.status === 'Perdido' ? 'selected' : '' %>>Perdido</option>
-        </select>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" type="submit">Guardar</button>
-    <a href="/devices" class="btn btn-secondary">Volver</a>
-
-  </form>
-</div>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
