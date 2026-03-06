@@ -5,7 +5,13 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const ExcelJS = require('exceljs'); // Para exportar a Excel
 const multer = require('multer');
+const fs = require('fs');
 
+// Asegurar que la carpeta de uploads existe
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const app = express();
 
