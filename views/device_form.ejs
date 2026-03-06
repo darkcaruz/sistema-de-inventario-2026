@@ -41,7 +41,8 @@
     <div class="card">
       <div class="card-header"><i class="bi bi-pencil-square me-2"></i> Datos del Dispositivo</div>
       <div class="card-body p-4">
-        <form method="POST" action="<%= device ? '/devices/' + device.id + '/edit' : '/devices/new' %>">
+        <form method="POST" action="<%= device ? '/devices/' + device.id + '/edit' : '/devices/new' %>"
+          enctype="multipart/form-data">
 
           <div class="row g-4 mb-4">
             <div class="col-md-4">
@@ -104,6 +105,38 @@
               <label class="form-label">Responsable Asignado</label>
               <input type="text" class="form-control" name="responsible" placeholder="Nombre completo"
                 value="<%= device ? device.responsible || '' : '' %>">
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Compra</label>
+              <input type="date" class="form-control" name="purchase_date"
+                value="<%= device ? device.purchase_date || '' : '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Asignación</label>
+              <input type="date" class="form-control" name="assignment_date"
+                value="<%= device ? device.assignment_date || '' : '' %>">
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Foto del Equipo</label>
+              <input type="file" class="form-control" name="device_photo" accept="image/*">
+              <% if (device && device.device_photo) { %>
+                <div class="mt-2 small text-secondary">Imagen actual: <a href="<%= device.device_photo %>"
+                    target="_blank">Ver</a></div>
+                <% } %>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Imagen de Factura / Boleta</label>
+              <input type="file" class="form-control" name="invoice_photo" accept="image/*,application/pdf">
+              <% if (device && device.invoice_photo) { %>
+                <div class="mt-2 small text-secondary">Factura actual: <a href="<%= device.invoice_photo %>"
+                    target="_blank">Ver</a></div>
+                <% } %>
             </div>
           </div>
 

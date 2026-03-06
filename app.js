@@ -4,6 +4,8 @@ const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const ExcelJS = require('exceljs'); // Para exportar a Excel
+const multer = require('multer');
+
 
 const app = express();
 
@@ -22,6 +24,19 @@ app.use(
     saveUninitialized: false,
   })
 );
+
+// Configuración de Multer para subida de archivos (Fotos y Facturas)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
 
 // Middleware para tener usuario/rol en las vistas
 app.use((req, res, next) => {
@@ -50,9 +65,19 @@ db.serialize(() => {
       status TEXT DEFAULT 'Disponible',
       location TEXT,
       responsible TEXT,
-      observations TEXT
+      observations TEXT,
+      purchase_date TEXT,
+      device_photo TEXT,
+      invoice_photo TEXT
     )
-  `);
+  `, () => {
+    // Aseguramos que las nuevas columnas existan si la tabla ya fue creada previamente
+    db.run("ALTER TABLE devices ADD COLUMN purchase_date TEXT", (err) => { });
+    db.run("ALTER TABLE devices ADD COLUMN device_photo TEXT", (err) => { });
+    db.run("ALTER TABLE devices ADD COLUMN invoice_photo TEXT", (err) => { });
+    db.run("ALTER TABLE devices ADD COLUMN assignment_date TEXT", (err) => { });
+  });
+
 
   // Tabla de asignaciones
   db.run(`
@@ -285,7 +310,7 @@ app.get('/devices/new', requireRole(['admin', 'editor']), (req, res) => {
   res.render('device_form', { device: null });
 });
 
-app.post('/devices/new', requireRole(['admin', 'editor']), (req, res) => {
+app.post('/devices/new', requireRole(['admin', 'editor']), upload.fields([{ name: 'device_photo', maxCount: 1 }, { name: 'invoice_photo', maxCount: 1 }]), (req, res) => {
   const {
     code,
     name,
@@ -298,13 +323,19 @@ app.post('/devices/new', requireRole(['admin', 'editor']), (req, res) => {
     location,
     responsible,
     observations,
+    purchase_date,
+    assignment_date
   } = req.body;
+
+  const device_photo = req.files['device_photo'] ? '/uploads/' + req.files['device_photo'][0].filename : null;
+  const invoice_photo = req.files['invoice_photo'] ? '/uploads/' + req.files['invoice_photo'][0].filename : null;
 
   db.run(
     `INSERT INTO devices
       (code, name, brand_model, cpu, ram, storage,
-       serial_number, status, location, responsible, observations)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       serial_number, status, location, responsible, observations,
+       purchase_date, assignment_date, device_photo, invoice_photo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       code,
       name,
@@ -317,6 +348,10 @@ app.post('/devices/new', requireRole(['admin', 'editor']), (req, res) => {
       location,
       responsible,
       observations,
+      purchase_date,
+      assignment_date,
+      device_photo,
+      invoice_photo
     ],
     (err) => {
       if (err) {
@@ -342,7 +377,7 @@ app.get('/devices/:id/edit', requireRole(['admin', 'editor']), (req, res) => {
   });
 });
 
-app.post('/devices/:id/edit', requireRole(['admin', 'editor']), (req, res) => {
+app.post('/devices/:id/edit', requireRole(['admin', 'editor']), upload.fields([{ name: 'device_photo', maxCount: 1 }, { name: 'invoice_photo', maxCount: 1 }]), (req, res) => {
   const {
     code,
     name,
@@ -355,35 +390,54 @@ app.post('/devices/:id/edit', requireRole(['admin', 'editor']), (req, res) => {
     location,
     responsible,
     observations,
+    purchase_date,
+    assignment_date
   } = req.body;
 
-  db.run(
-    `UPDATE devices SET
-      code = ?, name = ?, brand_model = ?, cpu = ?, ram = ?, storage = ?,
-      serial_number = ?, status = ?, location = ?, responsible = ?, observations = ?
-     WHERE id = ?`,
-    [
-      code,
-      name,
-      brand_model,
-      cpu,
-      ram,
-      storage,
-      serial_number,
-      status,
-      location,
-      responsible,
-      observations,
-      req.params.id,
-    ],
-    (err) => {
-      if (err) {
-        console.error('Error actualizando equipo:', err);
-        return res.status(500).send('Error al actualizar');
-      }
-      res.redirect('/devices/' + req.params.id);
+  db.get('SELECT device_photo, invoice_photo FROM devices WHERE id = ?', [req.params.id], (err, row) => {
+    let device_photo = row ? row.device_photo : null;
+    let invoice_photo = row ? row.invoice_photo : null;
+
+    if (req.files['device_photo']) {
+      device_photo = '/uploads/' + req.files['device_photo'][0].filename;
     }
-  );
+    if (req.files['invoice_photo']) {
+      invoice_photo = '/uploads/' + req.files['invoice_photo'][0].filename;
+    }
+
+    db.run(
+      `UPDATE devices SET
+        code = ?, name = ?, brand_model = ?, cpu = ?, ram = ?, storage = ?,
+        serial_number = ?, status = ?, location = ?, responsible = ?, observations = ?,
+        purchase_date = ?, assignment_date = ?, device_photo = ?, invoice_photo = ?
+       WHERE id = ?`,
+      [
+        code,
+        name,
+        brand_model,
+        cpu,
+        ram,
+        storage,
+        serial_number,
+        status,
+        location,
+        responsible,
+        observations,
+        purchase_date,
+        assignment_date,
+        device_photo,
+        invoice_photo,
+        req.params.id,
+      ],
+      (err) => {
+        if (err) {
+          console.error('Error actualizando equipo:', err);
+          return res.status(500).send('Error al actualizar');
+        }
+        res.redirect('/devices/' + req.params.id);
+      }
+    );
+  });
 });
 
 // ----------------------
